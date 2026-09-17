@@ -1,0 +1,19 @@
+[project]
+name = "study_crunch_ai"
+version = "0.1.0"
+description = "Study Crunch AI - Academic Crunch & Study Planning Tool"
+entry-point = "main.jac"
+kind = "cli"
+
+[dependencies]
+
+[dev-dependencies]
+
+[serve]
+port = 8000
+base_route_app = "app"
+
+[scripts]
+cli = "jac run cli/main.jac"
+web = "jac run web/main.jac"
+mobile = "jac run mobile/main.jac"
