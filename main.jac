@@ -8,11 +8,17 @@ import from core.models {
     Task,
     ScheduleSlot,
     StudyBlock,
+    Module,
     UserContext,
     HasTask,
     HasSlot,
     HasBlock,
+    HasModule,
     HasContext
+}
+import from core.persistence {
+    SaveStateToFile,
+    LoadStateFromFile
 }
 
 def display_banner() {
@@ -24,46 +30,83 @@ def display_banner() {
 
 def verify_system() {
     print("[*] Verifying multi-interface architecture...");
-    print("  [+] Core Engine (`core/`): Loaded base archetypes (Task, ScheduleSlot, StudyBlock, UserContext)");
+    print("  [+] Core Engine (`core/`): Loaded base archetypes (Task, ScheduleSlot, StudyBlock, Module, UserContext)");
     print("  [+] CLI Interface (`cli/`): Ready (`jac run cli/main.jac`)");
     print("  [+] Web Dashboard (`web/`): Ready (`jac run web/main.jac`)");
     print("  [+] Mobile Client (`mobile/`): Ready (`jac run mobile/main.jac`)");
-    print("\n[*] Initializing verification graph nodes...");
+    print("\n[*] Initializing verification graph nodes & persistence...");
 
-    # Attach verification nodes to root
-    root +>:HasTask:+> Task(
-        id="task_dsp_rev",
-        title="DSP Revision for Midterms",
-        module="EC401",
-        deadline="2026-09-20 18:00",
-        estimated_hours=3.5,
-        weight_score=8,
-        status="scheduled"
-    );
+    # Attach verification module if not present
+    if len([root ->:HasModule:->]) == 0 {
+        root +>:HasModule:+> Module(
+            code="EC401",
+            title="Digital Signal Processing",
+            difficulty_score=8,
+            credit_weight=4.0
+        );
+    }
 
-    root +>:HasSlot:+> ScheduleSlot(
-        id="slot_001",
-        task_id="task_dsp_rev",
-        start_time="2026-09-18 09:00",
-        end_time="2026-09-18 12:30",
-        is_locked=True
-    );
+    # Attach verification task if not present
+    if len([root ->:HasTask:->]) == 0 {
+        root +>:HasTask:+> Task(
+            id="task_dsp_rev",
+            title="DSP Revision for Midterms",
+            module="EC401",
+            deadline="2026-09-20 18:00",
+            estimated_hours=3.5,
+            weight_score=8,
+            priority="high",
+            status="scheduled"
+        );
+    }
 
-    root +>:HasBlock:+> StudyBlock(
-        id="block_001",
-        task_id="task_dsp_rev",
-        module="EC401",
-        start_time="2026-09-18 09:00",
-        end_time="2026-09-18 12:30",
-        duration_hours=3.5,
-        is_completed=False
-    );
+    # Attach verification slot if not present
+    if len([root ->:HasSlot:->]) == 0 {
+        root +>:HasSlot:+> ScheduleSlot(
+            id="slot_001",
+            task_id="task_dsp_rev",
+            start_time="2026-09-18 09:00",
+            end_time="2026-09-18 12:30",
+            duration_hours=3.5,
+            is_locked=True
+        );
+    }
 
+    # Attach verification study block if not present
+    if len([root ->:HasBlock:->]) == 0 {
+        root +>:HasBlock:+> StudyBlock(
+            id="block_001",
+            task_id="task_dsp_rev",
+            module="EC401",
+            start_time="2026-09-18 09:00",
+            end_time="2026-09-18 12:30",
+            duration_hours=3.5,
+            is_completed=False,
+            is_crunch=True
+        );
+    }
+
+    # Attach user context if not present
+    if len([root ->:HasContext:->]) == 0 {
+        root +>:HasContext:+> UserContext(
+            daily_study_capacity=6.0,
+            wake_time="07:00",
+            sleep_time="23:00",
+            max_continuous_hours=3.0
+        );
+    }
+
+    modules = [root ->:HasModule:->];
     tasks = [root ->:HasTask:->];
     slots = [root ->:HasSlot:->];
     blocks = [root ->:HasBlock:->];
 
-    print(f"  [+] Graph Check: {len(tasks)} Task(s), {len(slots)} Slot(s), {len(blocks)} StudyBlock(s) active.");
+    print(f"  [+] Graph Check: {len(modules)} Module(s), {len(tasks)} Task(s), {len(slots)} Slot(s), {len(blocks)} StudyBlock(s) active.");
+
+    # Test disk-backed persistence
+    root spawn SaveStateToFile();
+    print("  [+] Persistence Check: Graph state synchronized to disk (.jac/study_crunch_state.json).");
+
     print("\n[SUCCESS] Study Crunch AI workspace initialized and compiled cleanly!");
     print("------------------------------------------------------------------");
     print("Try running the CLI with:");
