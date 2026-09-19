@@ -20,6 +20,9 @@ import from core.persistence {
     SaveStateToFile,
     LoadStateFromFile
 }
+import from core.triage_agent {
+    CrisisTriageAgent
+}
 
 def display_banner() {
     print("==================================================================");
@@ -35,6 +38,9 @@ def verify_system() {
     print("  [+] Web Dashboard (`web/`): Ready (`jac run web/main.jac`)");
     print("  [+] Mobile Client (`mobile/`): Ready (`jac run mobile/main.jac`)");
     print("\n[*] Initializing verification graph nodes & persistence...");
+
+    # Load existing state if available
+    root spawn LoadStateFromFile();
 
     # Attach verification module if not present
     if len([root ->:HasModule:->]) == 0 {
@@ -106,6 +112,21 @@ def verify_system() {
     # Test disk-backed persistence
     root spawn SaveStateToFile();
     print("  [+] Persistence Check: Graph state synchronized to disk (.jac/study_crunch_state.json).");
+
+    # Test Crisis Triage Agent
+    print("\n[*] Testing Crisis Triage Engine (Autonomous Conflict Resolution)...");
+    triage_run = root spawn CrisisTriageAgent(
+        task_title="Urgent DSP Midterm Prep",
+        deadline="tomorrow 20:00",
+        estimated_hours=2.0,
+        weight_score=9,
+        module="EC401"
+    );
+    if triage_run.decision is not None {
+        print(f"  [+] Triage Agent Decision: {triage_run.decision.summary}");
+        print(f"  [+] Allocated Window: {triage_run.decision.allocated_start} -> {triage_run.decision.allocated_end}");
+        print(f"  [+] Reasoning Steps Recorded: {len(triage_run.decision.reasoning)} steps");
+    }
 
     print("\n[SUCCESS] Study Crunch AI workspace initialized and compiled cleanly!");
     print("------------------------------------------------------------------");

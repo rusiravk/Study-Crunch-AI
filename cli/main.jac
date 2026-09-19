@@ -8,9 +8,15 @@ import argparse;
 import sys;
 import from core.models {
     Task,
-    ScheduleSlot,
-    StudyBlock,
-    UserContext
+    HasTask,
+    HasBlock
+}
+import from core.persistence {
+    LoadStateFromFile,
+    SaveStateToFile
+}
+import from core.triage_agent {
+    CrisisTriageAgent
 }
 
 def parse_priority(prio_str: str) -> int {
@@ -44,14 +50,44 @@ def parse_est_hours(est_str: str) -> float {
 }
 
 def handle_triage(task_title: str, due: str, est: str, prio: str, module: str) {
-    print("\n[CRISIS TRIAGE MODE ACTIVATED]");
-    print(f"[*] Analyzing incoming deadline: '{task_title}'");
-    print(f"[*] Module: {module or 'General'} | Deadline: {due or 'Immediate'} | Estimated Duration: {est or '2h'} | Priority: {prio or 'High'}");
-    print("[*] Retrieving current schedule and available study blocks...");
-    print("[*] Detected conflict: Existing routine slot overlaps with target window.");
-    print("[*] Reflection & Backtracking: Deferring low-weight routine study block to weekend.");
-    print("[*] Auto-rescheduling successful: Allocated dedicated StudyBlock for crunch deadline.");
-    print(f"[SUCCESS] '{task_title}' successfully scheduled with zero conflicts!\n");
+    prio_val = parse_priority(prio) if prio else 8;
+    est_val = parse_est_hours(est) if est else 2.0;
+    mod_code = module if module else "GEN101";
+    due_date = due if due else "tomorrow 18:00";
+
+    print("\n=======================================================");
+    print("       STUDY CRUNCH AI - CRISIS TRIAGE ENGINE          ");
+    print("=======================================================");
+    print(f"[*] Crunch Task: '{task_title}'");
+    print(f"[*] Module: {mod_code} | Deadline: {due_date} | Est: {est_val}h | Weight: {prio_val}/10");
+    print("[*] Spawning CrisisTriageAgent on planning graph...\n");
+
+    root spawn LoadStateFromFile();
+
+    agent = root spawn CrisisTriageAgent(
+        task_title=task_title,
+        deadline=due_date,
+        estimated_hours=est_val,
+        weight_score=prio_val,
+        module=mod_code
+    );
+
+    if agent.decision is not None {
+        for step in agent.decision.reasoning {
+            print(f"  {step}");
+        }
+        if agent.decision.success {
+            slot_str = f"{agent.decision.allocated_start} -> {agent.decision.allocated_end}";
+            print(f"\n[SUCCESS] '{task_title}' scheduled into slot: {slot_str}");
+            print(f"[STATUS] Outcome: {agent.decision.summary}");
+            if len(agent.decision.deferred_tasks) > 0 {
+                print(f"[ACTION] Deferred Lower-Priority Tasks: {agent.decision.deferred_tasks}");
+            }
+        } else {
+            print(f"\n[NOTICE] Allocation deferred: {agent.decision.summary}");
+        }
+    }
+    print("=======================================================\n");
 }
 
 def handle_add(task_title: str, due: str, est: str, prio: str, module: str) {
@@ -60,26 +96,61 @@ def handle_add(task_title: str, due: str, est: str, prio: str, module: str) {
     h_val: int = int(abs(hash(task_title)));
     task_hash = str(h_val % 10000);
     task_id = f"task_{task_hash}";
+    mod_code = module if module else "GEN101";
+    due_date = due if due else "tomorrow 18:00";
     
     print(f"\n[ADD TASK] Adding '{task_title}' to Study Crunch AI...");
     print(f"  - ID: {task_id}");
-    print(f"  - Module: {module or 'General'}");
-    print(f"  - Due Date: {due or 'None'}");
+    print(f"  - Module: {mod_code}");
+    print(f"  - Due Date: {due_date}");
     print(f"  - Est. Hours: {est_val}h");
     print(f"  - Priority Weight: {prio_val}/10");
-    print("[SUCCESS] Task registered in planning graph.\n");
+
+    root spawn LoadStateFromFile();
+    root +>:HasTask:+> Task(
+        id=task_id,
+        title=task_title,
+        module=mod_code,
+        deadline=due_date,
+        estimated_hours=est_val,
+        weight_score=prio_val,
+        priority="high" if prio_val >= 8 else ("medium" if prio_val >= 5 else "low"),
+        status="pending"
+    );
+    root spawn SaveStateToFile();
+    print("[SUCCESS] Task registered in planning graph and saved to disk.\n");
 }
 
 def handle_status() {
+    root spawn LoadStateFromFile();
+    blocks = [root ->:HasBlock:->];
+    tasks = [root ->:HasTask:->];
+
     print("\n=======================================================");
     print("           STUDY CRUNCH AI - SCHEDULE STATUS           ");
     print("=======================================================");
     print("Active User Capacity: 6.0 hrs/day (07:00 -> 23:00)");
-    print("\nUpcoming Study Blocks:");
-    print("  [1] EE301 - DSP Revision       | 09:00 - 11:00 (2.0h) | Status: Scheduled");
-    print("  [2] CS304 - OS Lab 02          | 14:00 - 16:30 (2.5h) | Status: Pending");
-    print("  [3] MA202 - Complex Variables  | 19:00 - 20:30 (1.5h) | Status: Routine");
-    print("\nStatus: Schedule is optimized. No imminent conflicts detected.");
+    print(f"\nTracked Tasks ({len(tasks)}):");
+    if len(tasks) == 0 {
+        print("  No tasks registered yet. Add one via 'jac run cli/main.jac add --task ...'");
+    } else {
+        for t in tasks {
+            print(f"  * [{t.module}] {t.title} (Due: {t.deadline}, Est: {t.estimated_hours}h, Prio: {t.priority})");
+        }
+    }
+
+    print(f"\nUpcoming Study Blocks ({len(blocks)}):");
+    if len(blocks) == 0 {
+        print("  No active study blocks scheduled.");
+    } else {
+        idx = 1;
+        for b in blocks {
+            crunch_tag = "CRUNCH" if b.is_crunch else "ROUTINE";
+            print(f"  [{idx}] {b.module} | {b.start_time} - {b.end_time} ({b.duration_hours}h) | [{crunch_tag}]");
+            idx += 1;
+        }
+    }
+    print("\nStatus: Schedule is synchronized to disk.");
     print("=======================================================\n");
 }
 
