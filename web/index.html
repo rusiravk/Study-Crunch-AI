@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study Crunch AI - Academic Crunch & Study Planning Dashboard</title>
+  <meta name="description" content="Autonomous Agentic Planning Assistant for Engineering and STEM Crunch Deadlines. Built with Jaclang and ByLLM.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #070b14;
+      --bg-card: rgba(16, 24, 40, 0.75);
+      --bg-card-hover: rgba(23, 34, 56, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(99, 102, 241, 0.3);
+      --primary: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.5);
+      --crunch: #f43f5e;
+      --crunch-glow: rgba(244, 63, 94, 0.4);
+      --routine: #06b6d4;
+      --routine-glow: rgba(6, 182, 212, 0.4);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(244, 63, 94, 0.1) 0%, transparent 45%);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Top Navigation Header */
+    header {
+      backdrop-filter: blur(16px);
+      background: rgba(7, 11, 20, 0.8);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0.85rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #f43f5e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.25rem;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #fff, #cbd5e1);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.2rem 0.5rem;
+      border-radius: 20px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #a5b4fc;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: rgba(16, 24, 40, 0.6);
+      border: 1px solid var(--border-color);
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--success);
+      box-shadow: 0 0 10px var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    .nav-btn {
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--primary);
+    }
+
+    .nav-btn.primary {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      border: none;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .nav-btn.primary:hover {
+      box-shadow: 0 0 25px var(--primary-glow);
+      transform: translateY(-1px);
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem 3rem 2rem;
+    }
+
+    /* Stats Overview Banner */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.15rem 1.35rem;
+      backdrop-filter: blur(12px);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-glow);
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+    }
+
+    .stat-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-val.crunch-color { color: var(--crunch); text-shadow: 0 0 15px var(--crunch-glow); }
+    .stat-val.routine-color { color: var(--routine); text-shadow: 0 0 15px var(--routine-glow); }
+    .stat-val.primary-color { color: var(--primary); }
+
+    .stat-sub {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 0.25rem;
+    }
+
+    /* Tabs Navigation */
+    .tabs-bar {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1.5rem;
+    }
+
+    .tab-item {
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tab-item:hover {
+      color: var(--text-main);
+    }
+
+    .tab-item.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .tab-badge {
+      font-size: 0.75rem;
+      padding: 0.1rem 0.45rem;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Content Layout */
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Layout Grid */
+    .two-col-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 960px) {
+      .two-col-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards & Containers */
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.5rem;
+      backdrop-filter: blur(12px);
+      margin-bottom: 1.5rem;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .panel-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Timeline Day Bar Visualizer */
+    .timeline-container {
+      margin-top: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .hours-axis {
+      display: grid;
+      grid-template-columns: repeat(16, 1fr);
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      margin-bottom: 0.35rem;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .timeline-track {
+      height: 38px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+
+    .timeline-block-item {
+      height: 100%;
+      border-radius: 6px;
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+      padding: 0 0.5rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .timeline-block-item:hover {
+      filter: brightness(1.2);
+      transform: scaleY(1.05);
+      z-index: 10;
+    }
+
+    .timeline-block-item.crunch {
+      background: linear-gradient(90deg, #f43f5e, #e11d48);
+      border: 1px solid rgba(244, 63, 94, 0.8);
+      box-shadow: 0 0 12px var(--crunch-glow);
+    }
+
+    .timeline-block-item.routine {
+      background: linear-gradient(90deg, #06b6d4, #0284c7);
+      border: 1px solid rgba(6, 182, 212, 0.8);
+      box-shadow: 0 0 12px var(--routine-glow);
+    }
+
+    /* Study Block List */
+    .block-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .block-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s;
+    }
+
+    .block-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .block-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .block-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+    }
+
+    .block-tag.crunch {
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      color: #fda4af;
+    }
+
+    .block-tag.routine {
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      color: #67e8f9;
+    }
+
+    .block-title-text {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .block-time-text {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Crisis Triage Interactive Form */
+    .triage-hero {
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.08), rgba(99, 102, 241, 0.08));
+      border: 1px solid rgba(244, 63, 94, 0.25);
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      color: var(--text-muted);
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .range-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--crunch);
+      min-width: 45px;
+    }
+
+    .btn-crunch {
+      width: 100%;
+      padding: 0.9rem;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #f43f5e, #e11d48);
+      border: none;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      box-shadow: 0 0 25px var(--crunch-glow);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-crunch:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 35px rgba(244, 63, 94, 0.6);
+    }
+
+    .btn-crunch:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Live 5-Step Reflection Console */
+    .reflection-console {
+      background: #040711;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1.25rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      min-height: 240px;
+      max-height: 380px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .log-line {
+      line-height: 1.5;
+      padding: 0.2rem 0;
+      opacity: 0;
+      animation: logSlide 0.3s forwards;
+    }
+
+    @keyframes logSlide {
+      from { opacity: 0; transform: translateX(-8px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .log-line.step1 { color: #a5b4fc; }
+    .log-line.step2 { color: #38bdf8; }
+    .log-line.step3 { color: #fbbf24; }
+    .log-line.step4 { color: #f43f5e; font-weight: 600; }
+    .log-line.step5 { color: #34d399; font-weight: 700; }
+
+    /* Modules Grid */
+    .module-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .module-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.35rem;
+      backdrop-filter: blur(12px);
+      transition: all 0.2s;
+    }
+
+    .module-card:hover {
+      border-color: var(--border-glow);
+      transform: translateY(-2px);
+    }
+
+    .module-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .module-code {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .module-credits {
+      font-size: 0.75rem;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      color: var(--text-muted);
+    }
+
+    .module-name {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .diff-meter-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-bottom: 0.35rem;
+    }
+
+    .diff-bar-bg {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .diff-bar-fill {
+      height: 100%;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, #6366f1, #f43f5e);
+    }
+
+    /* Task Checklist */
+    .task-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      transition: background 0.2s;
+    }
+
+    .task-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .task-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .check-btn {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      border: 2px solid var(--border-color);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .check-btn.checked {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+    }
+
+    .task-info-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .task-info-title.completed {
+      text-decoration: line-through;
+      color: var(--text-dim);
+    }
+
+    .task-info-meta {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">SC</div>
+      <div>
+        <div class="brand-title">Study Crunch AI</div>
+      </div>
+      <span class="brand-badge">Agentic Engine v0.16.7</span>
+    </div>
+
+    <div class="header-actions">
+      <div class="status-pill">
+        <span class="pulse-dot"></span>
+        <span id="capacity-indicator">Capacity: 6.0h (07:00-23:00)</span>
+      </div>
+      <a href="/mobile" class="nav-btn">📱 Mobile View</a>
+    </div>
+  </header>
+
+  <!-- Main View -->
+  <main>
+
+    <!-- Top KPI Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">TODAY'S CRUNCH LOAD</div>
+        <div class="stat-val crunch-color" id="stat-crunch-hours">-- hrs</div>
+        <div class="stat-sub" id="stat-crunch-blocks">Active crunch blocks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">TOTAL WORKLOAD</div>
+        <div class="stat-val routine-color" id="stat-total-workload">-- hrs</div>
+        <div class="stat-sub" id="stat-total-blocks">Across scheduled sessions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">PENDING ASSIGNMENTS</div>
+        <div class="stat-val primary-color" id="stat-pending-tasks">--</div>
+        <div class="stat-sub">Tracked in planning graph</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ENROLLED MODULES</div>
+        <div class="stat-val" id="stat-module-count">--</div>
+        <div class="stat-sub">Syllabus weights indexed</div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-bar">
+      <div class="tab-item active" onclick="switchTab('tab-timeline')">
+        📅 Calendar Timeline
+      </div>
+      <div class="tab-item" onclick="switchTab('tab-triage')">
+        ⚡ Crisis Triage Visualizer <span class="tab-badge" style="background: rgba(244,63,94,0.2); color:#fda4af;">Autonomous</span>
+      </div>
+      <div class="tab-item" onclick="switchTab('tab-modules')">
+        📚 Syllabus & Modules
+      </div>
+      <div class="tab-item" onclick="switchTab('tab-tasks')">
+        📋 Task Repository
+      </div>
+    </div>
+
+    <!-- Tab 1: Calendar Timeline -->
+    <div id="tab-timeline" class="tab-pane active">
+      <div class="two-col-grid">
+        <div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="panel-title">24-Hour Schedule Ribbon</h2>
+              <span style="font-size: 0.8rem; color: var(--text-dim);">07:00 -> 23:00 Window</span>
+            </div>
+
+            <!-- Visual Bar -->
+            <div class="timeline-container">
+              <div class="hours-axis">
+                <span>07:00</span><span>08:00</span><span>09:00</span><span>10:00</span>
+                <span>11:00</span><span>12:00</span><span>13:00</span><span>14:00</span>
+                <span>15:00</span><span>16:00</span><span>17:00</span><span>18:00</span>
+                <span>19:00</span><span>20:00</span><span>21:00</span><span>22:00</span>
+              </div>
+              <div class="timeline-track" id="timeline-bar">
+                <!-- Injected dynamically -->
+              </div>
+            </div>
+
+            <!-- Legend -->
+            <div style="display: flex; gap: 1.5rem; font-size: 0.8rem; margin-top: 0.5rem; color: var(--text-muted);">
+              <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <span style="width: 12px; height: 12px; border-radius: 3px; background: var(--crunch);"></span>
+                <span>Crunch Block (Locked)</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <span style="width: 12px; height: 12px; border-radius: 3px; background: var(--routine);"></span>
+                <span>Routine Study (Deferrable)</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <span style="width: 12px; height: 12px; border-radius: 3px; background: rgba(255,255,255,0.1);"></span>
+                <span>Open Availability</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="panel-title">Scheduled Study Sessions</h2>
+            </div>
+            <div class="block-list" id="study-blocks-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side: Quick Add & Capacity Tracker -->
+        <div>
+          <div class="panel">
+            <h2 class="panel-title" style="margin-bottom: 1rem;">⚡ Quick Add Assignment</h2>
+            <form id="quick-add-form" onsubmit="handleQuickAdd(event)">
+              <div class="form-group">
+                <label class="form-label">Task Title</label>
+                <input type="text" id="add-title" class="form-input" placeholder="e.g. DSP Midterm Prep" required>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Module</label>
+                  <input type="text" id="add-module" class="form-input" placeholder="EC401" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Est. Hours</label>
+                  <input type="number" step="0.5" id="add-hours" class="form-input" value="2.0" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Deadline</label>
+                <input type="text" id="add-deadline" class="form-input" placeholder="tomorrow 18:00" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Priority Weight (1-10)</label>
+                <input type="range" min="1" max="10" value="8" id="add-weight" style="width: 100%;" oninput="document.getElementById('add-weight-display').innerText = this.value">
+                <div style="text-align: right; font-size: 0.8rem; color: var(--primary); font-weight: 600;"><span id="add-weight-display">8</span> / 10</div>
+              </div>
+              <button type="submit" class="nav-btn primary" style="width: 100%; justify-content: center; padding: 0.75rem;">+ Register Task to Graph</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Crisis Triage Visualizer -->
+    <div id="tab-triage" class="tab-pane">
+      <div class="two-col-grid">
+        <!-- Triage Input Console -->
+        <div>
+          <div class="triage-hero">
+            <h2 style="font-family: 'Outfit'; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.4rem; color: #fff;">
+              Autonomous Crisis Triage Engine
+            </h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+              When an urgent assignment threatens your schedule, the agent evaluates grade weights, simulates availability, and backtracks routine blocks to protect your sleep.
+            </p>
+
+            <form id="triage-form" onsubmit="executeCrisisTriage(event)">
+              <div class="form-group">
+                <label class="form-label">Incoming Deadline Task</label>
+                <input type="text" id="triage-title" class="form-input" placeholder="e.g. Urgent Robotics Exam Simulation" required>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Course Module</label>
+                  <input type="text" id="triage-module" class="form-input" placeholder="EE450" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Est. Duration (Hours)</label>
+                  <input type="number" step="0.5" id="triage-est" class="form-input" value="2.5" required>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Deadline</label>
+                  <input type="text" id="triage-due" class="form-input" placeholder="tomorrow 16:00" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Marks Weight (1-10)</label>
+                  <div class="range-wrap">
+                    <input type="range" min="1" max="10" value="9" id="triage-prio" style="flex: 1;" oninput="document.getElementById('triage-prio-val').innerText = this.value">
+                    <span class="range-val" id="triage-prio-val">9</span>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-crunch" id="btn-run-triage">
+                <span>⚡ EXECUTE CRISIS TRIAGE</span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Live 5-Step Reflection Console -->
+        <div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2 class="panel-title">🧠 Agent Reflection Stream</h2>
+              <span style="font-size: 0.75rem; color: var(--text-dim);">ByLLM 5-Step Loop</span>
+            </div>
+            <div class="reflection-console" id="reflection-log">
+              <div class="log-line" style="color: var(--text-dim); opacity: 1;">
+                System ready. Trigger Crisis Triage on the left to watch autonomous reflection and self-correction in real-time...
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Syllabus & Modules -->
+    <div id="tab-modules" class="tab-pane">
+      <div class="panel-header">
+        <h2 class="panel-title">Enrolled Course Syllabus & Difficulty Index</h2>
+      </div>
+      <div class="module-cards-grid" id="module-grid-container">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
+
+    <!-- Tab 4: Tasks Repository -->
+    <div id="tab-tasks" class="tab-pane">
+      <div class="panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Tracked Academic Tasks</h2>
+        </div>
+        <div id="task-checklist-container">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    let globalState = null;
+
+    // Fetch initial status from API
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        globalState = data;
+        renderDashboard(data);
+      } catch (err) {
+        console.error("Failed to load dashboard status:", err);
+      }
+    }
+
+    function renderDashboard(data) {
+      if (!data) return;
+
+      // Stats
+      let crunchHours = 0;
+      let crunchCount = 0;
+      let totalWorkload = 0;
+      const blocks = data.blocks || [];
+      const tasks = data.tasks || [];
+      const modules = data.modules || [];
+
+      blocks.forEach(b => {
+        if (!b.is_completed) {
+          totalWorkload += b.duration_hours;
+          if (b.is_crunch) {
+            crunchHours += b.duration_hours;
+            crunchCount++;
+          }
+        }
+      });
+
+      const pendingTasks = tasks.filter(t => t.status !== 'completed').length;
+
+      document.getElementById('stat-crunch-hours').innerText = crunchHours.toFixed(1) + ' hrs';
+      document.getElementById('stat-crunch-blocks').innerText = `${crunchCount} active crunch blocks`;
+      document.getElementById('stat-total-workload').innerText = totalWorkload.toFixed(1) + ' hrs';
+      document.getElementById('stat-total-blocks').innerText = `Across ${blocks.length} total sessions`;
+      document.getElementById('stat-pending-tasks').innerText = pendingTasks;
+      document.getElementById('stat-module-count').innerText = modules.length;
+
+      // Timeline Visual Ribbon
+      renderTimelineRibbon(blocks);
+
+      // Blocks List
+      renderStudyBlocks(blocks);
+
+      // Modules Grid
+      renderModules(modules, tasks);
+
+      // Tasks Checklist
+      renderTasks(tasks);
+    }
+
+    function renderTimelineRibbon(blocks) {
+      const track = document.getElementById('timeline-bar');
+      track.innerHTML = '';
+
+      // Window is 07:00 to 23:00 (16 hours total)
+      const windowStart = 7;
+      const windowHours = 16;
+
+      blocks.forEach((b, idx) => {
+        if (b.is_completed) return;
+        // Parse start hour
+        const parts = b.start_time.split(' ');
+        const timePart = parts.length > 1 ? parts[1] : parts[0];
+        const timeTokens = timePart.split(':');
+        const hour = parseFloat(timeTokens[0]) + (parseFloat(timeTokens[1] || 0) / 60);
+
+        if (hour >= windowStart && hour <= (windowStart + windowHours)) {
+          const leftPercent = ((hour - windowStart) / windowHours) * 100;
+          const widthPercent = Math.min((b.duration_hours / windowHours) * 100, 100 - leftPercent);
+
+          const blockEl = document.createElement('div');
+          blockEl.className = `timeline-block-item ${b.is_crunch ? 'crunch' : 'routine'}`;
+          blockEl.style.left = `${leftPercent}%`;
+          blockEl.style.width = `${Math.max(widthPercent, 5)}%`;
+          blockEl.innerText = `${b.module} (${b.duration_hours}h)`;
+          blockEl.title = `${b.module}: ${b.start_time} -> ${b.end_time} (${b.is_crunch ? 'CRUNCH' : 'ROUTINE'})`;
+          track.appendChild(blockEl);
+        }
+      });
+    }
+
+    function renderStudyBlocks(blocks) {
+      const container = document.getElementById('study-blocks-container');
+      container.innerHTML = '';
+
+      if (!blocks || blocks.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-dim); text-align: center; padding: 2rem;">No study blocks scheduled. Use Quick Add or Crisis Triage!</div>';
+        return;
+      }
+
+      blocks.forEach(b => {
+        const item = document.createElement('div');
+        item.className = 'block-item';
+        item.innerHTML = `
+          <div class="block-meta">
+            <span class="block-tag ${b.is_crunch ? 'crunch' : 'routine'}">${b.is_crunch ? 'CRUNCH' : 'ROUTINE'}</span>
+            <div>
+              <div class="block-title-text">${b.module} Study Session (${b.duration_hours}h)</div>
+              <div class="block-time-text">${b.start_time} &rarr; ${b.end_time}</div>
+            </div>
+          </div>
+          <div style="font-size: 0.8rem; font-weight: 600; color: ${b.is_completed ? 'var(--success)' : 'var(--primary)'};">
+            ${b.is_completed ? '&#10003; COMPLETED' : 'ACTIVE'}
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function renderModules(modules, tasks) {
+      const container = document.getElementById('module-grid-container');
+      container.innerHTML = '';
+
+      modules.forEach(m => {
+        const linkedCount = tasks.filter(t => t.module === m.code).length;
+        const diffPercent = (m.difficulty_score / 10) * 100;
+        const card = document.createElement('div');
+        card.className = 'module-card';
+        card.innerHTML = `
+          <div class="module-header">
+            <span class="module-code">${m.code}</span>
+            <span class="module-credits">${m.credit_weight} Credits</span>
+          </div>
+          <div class="module-name">${m.title}</div>
+          <div class="diff-meter-label">
+            <span>Syllabus Difficulty</span>
+            <span style="font-weight: 700; color: #fff;">${m.difficulty_score} / 10</span>
+          </div>
+          <div class="diff-bar-bg">
+            <div class="diff-bar-fill" style="width: ${diffPercent}%;"></div>
+          </div>
+          <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-dim);">
+            ${linkedCount} active/pending assignment(s)
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderTasks(tasks) {
+      const container = document.getElementById('task-checklist-container');
+      container.innerHTML = '';
+
+      tasks.forEach(t => {
+        const isDone = t.status === 'completed';
+        const item = document.createElement('div');
+        item.className = 'task-item';
+        item.innerHTML = `
+          <div class="task-left">
+            <button class="check-btn ${isDone ? 'checked' : ''}" onclick="toggleTaskComplete('${t.title}')">
+              ${isDone ? '&#10003;' : ''}
+            </button>
+            <div>
+              <div class="task-info-title ${isDone ? 'completed' : ''}">${t.title}</div>
+              <div class="task-info-meta">Module: ${t.module} | Due: ${t.deadline} | Est: ${t.estimated_hours}h | Prio: ${t.priority}</div>
+            </div>
+          </div>
+          <span class="brand-badge" style="${isDone ? 'background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.3);' : ''}">${t.status.toUpperCase()}</span>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    async function toggleTaskComplete(title) {
+      try {
+        await fetch('/api/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ task: title })
+        });
+        loadDashboard();
+      } catch (err) {
+        console.error("Error completing task:", err);
+      }
+    }
+
+    async function handleQuickAdd(e) {
+      e.preventDefault();
+      const title = document.getElementById('add-title').value;
+      const mod = document.getElementById('add-module').value;
+      const hours = parseFloat(document.getElementById('add-hours').value);
+      const due = document.getElementById('add-deadline').value;
+      const weight = parseInt(document.getElementById('add-weight').value);
+
+      try {
+        await fetch('/api/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: title,
+            module: mod,
+            estimated_hours: hours,
+            deadline: due,
+            weight_score: weight
+          })
+        });
+        document.getElementById('quick-add-form').reset();
+        loadDashboard();
+        alert(`Task '${title}' registered to Study Crunch AI!`);
+      } catch (err) {
+        console.error("Failed to add task:", err);
+      }
+    }
+
+    async function executeCrisisTriage(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-run-triage');
+      btn.disabled = true;
+      btn.innerText = "⏳ RUNNING 5-STEP TRIAGE...";
+
+      const logConsole = document.getElementById('reflection-log');
+      logConsole.innerHTML = '';
+
+      const task = document.getElementById('triage-title').value;
+      const mod = document.getElementById('triage-module').value;
+      const est = parseFloat(document.getElementById('triage-est').value);
+      const due = document.getElementById('triage-due').value;
+      const weight = parseInt(document.getElementById('triage-prio').value);
+
+      try {
+        const res = await fetch('/api/triage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            task_title: task,
+            module: mod,
+            estimated_hours: est,
+            deadline: due,
+            weight_score: weight
+          })
+        });
+        const decision = await res.json();
+
+        // Animate reflection steps sequentially
+        const steps = decision.reasoning || [];
+        for (let i = 0; i < steps.length; i++) {
+          await new Promise(r => setTimeout(r, 260));
+          const line = document.createElement('div');
+          line.className = `log-line step${(i % 5) + 1}`;
+          line.innerText = steps[i];
+          logConsole.appendChild(line);
+          logConsole.scrollTop = logConsole.scrollHeight;
+        }
+
+        const summaryLine = document.createElement('div');
+        summaryLine.className = 'log-line step5';
+        summaryLine.style.marginTop = '0.5rem';
+        summaryLine.innerText = `[DECISION] ${decision.summary}`;
+        logConsole.appendChild(summaryLine);
+
+        loadDashboard();
+      } catch (err) {
+        console.error("Crisis Triage error:", err);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "⚡ EXECUTE CRISIS TRIAGE";
+      }
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+
+      event.currentTarget.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    // Auto-poll every 5 seconds to guarantee cross-interface reactive sync with CLI
+    loadDashboard();
+    setInterval(loadDashboard, 4000);
+  </script>
+</body>
+</html>

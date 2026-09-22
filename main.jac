@@ -129,11 +129,11 @@ def verify_system() {
     }
 
     print("\n[SUCCESS] Study Crunch AI workspace initialized and compiled cleanly!");
-    print("------------------------------------------------------------------");
-    print("Try running the CLI with:");
-    print('  jac run cli/main.jac triage --task "Lab 03" --due "tomorrow 18:00" --est 4h');
-    print('  jac run cli/main.jac add --task "DSP Revision" --prio high');
-    print("  jac run cli/main.jac status");
+    print("Try running the interfaces with:");
+    print('  CLI Triage     : jac run cli/main.jac triage --task "Lab 03" --due "tomorrow 18:00" --est 4h');
+    print('  CLI Status     : jac run cli/main.jac status');
+    print('  Web Dashboard  : jac run web/main.jac (http://localhost:8000)');
+    print('  Mobile Client  : jac run mobile/main.jac (http://localhost:8000/mobile)');
     print("==================================================================\n");
 }
 
