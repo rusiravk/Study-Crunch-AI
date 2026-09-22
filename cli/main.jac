@@ -8,8 +8,13 @@ import argparse;
 import sys;
 import from core.models {
     Task,
+    StudyBlock,
+    Module,
+    UserContext,
     HasTask,
-    HasBlock
+    HasBlock,
+    HasModule,
+    HasContext
 }
 import from core.persistence {
     LoadStateFromFile,
@@ -49,15 +54,31 @@ def parse_est_hours(est_str: str) -> float {
     }
 }
 
+def render_ascii_timeline(blocks: list[StudyBlock]) {
+    print("-------------------------------------------------------------------------");
+    print(" Time Window       | Module   | Duration | Allocation Type | Status       ");
+    print("-------------------+----------+----------+-----------------+---------------");
+    if len(blocks) == 0 {
+        print(" (No study blocks allocated. Timeline is completely open.)               ");
+    } else {
+        for b in blocks {
+            tag = "[!] CRUNCH " if b.is_crunch else "[~] ROUTINE";
+            stat = "COMPLETED" if b.is_completed else "ACTIVE   ";
+            print(f" {b.start_time} - {b.end_time} | {b.module:<8} | {b.duration_hours:>4.1f}h  | {tag}     | {stat}   ");
+        }
+    }
+    print("-------------------------------------------------------------------------");
+}
+
 def handle_triage(task_title: str, due: str, est: str, prio: str, module: str) {
     prio_val = parse_priority(prio) if prio else 8;
     est_val = parse_est_hours(est) if est else 2.0;
     mod_code = module if module else "GEN101";
     due_date = due if due else "tomorrow 18:00";
 
-    print("\n=======================================================");
-    print("       STUDY CRUNCH AI - CRISIS TRIAGE ENGINE          ");
-    print("=======================================================");
+    print("\n=========================================================================");
+    print("                 STUDY CRUNCH AI - CRISIS TRIAGE ENGINE                  ");
+    print("=========================================================================");
     print(f"[*] Crunch Task: '{task_title}'");
     print(f"[*] Module: {mod_code} | Deadline: {due_date} | Est: {est_val}h | Weight: {prio_val}/10");
     print("[*] Spawning CrisisTriageAgent on planning graph...\n");
@@ -87,7 +108,7 @@ def handle_triage(task_title: str, due: str, est: str, prio: str, module: str) {
             print(f"\n[NOTICE] Allocation deferred: {agent.decision.summary}");
         }
     }
-    print("=======================================================\n");
+    print("=========================================================================\n");
 }
 
 def handle_add(task_title: str, due: str, est: str, prio: str, module: str) {
@@ -125,33 +146,127 @@ def handle_status() {
     root spawn LoadStateFromFile();
     blocks = [root ->:HasBlock:->];
     tasks = [root ->:HasTask:->];
+    contexts = [root ->:HasContext:->];
 
-    print("\n=======================================================");
-    print("           STUDY CRUNCH AI - SCHEDULE STATUS           ");
-    print("=======================================================");
-    print("Active User Capacity: 6.0 hrs/day (07:00 -> 23:00)");
-    print(f"\nTracked Tasks ({len(tasks)}):");
-    if len(tasks) == 0 {
-        print("  No tasks registered yet. Add one via 'jac run cli/main.jac add --task ...'");
-    } else {
-        for t in tasks {
-            print(f"  * [{t.module}] {t.title} (Due: {t.deadline}, Est: {t.estimated_hours}h, Prio: {t.priority})");
+    cap_str = "6.0 hrs/day (07:00 -> 23:00)";
+    if len(contexts) > 0 {
+        ctx = contexts[0];
+        cap_str = f"{ctx.daily_study_capacity} hrs/day ({ctx.wake_time} -> {ctx.sleep_time})";
+    }
+
+    print("\n=========================================================================");
+    print("                    STUDY CRUNCH AI - SCHEDULE STATUS                    ");
+    print("=========================================================================");
+    print(f"Active Study Capacity : {cap_str}");
+    
+    total_study_h = 0.0;
+    crunch_count = 0;
+    for b in blocks {
+        if not b.is_completed {
+            total_study_h += b.duration_hours;
+            if b.is_crunch { crunch_count += 1; }
+        }
+    }
+    print(f"Scheduled Workload    : {total_study_h:.1f} hrs across {len(blocks)} block(s) ({crunch_count} crunch)");
+    print("");
+    print("Daily Timetable Grid:");
+    render_ascii_timeline(blocks);
+
+    print(f"\nActive Tasks ({len(tasks)} total):");
+    active_tasks = 0;
+    for t in tasks {
+        if t.status != "completed" {
+            print(f"  * [{t.module}] {t.title} (Due: {t.deadline}, Est: {t.estimated_hours}h, Prio: {t.priority}, Status: {t.status})");
+            active_tasks += 1;
+        }
+    }
+    if active_tasks == 0 {
+        print("  All tasks completed or none registered. Add one via 'jac run cli/main.jac add --task ...'");
+    }
+    print("\nStatus: Schedule synchronized to disk (.jac/study_crunch_state.json).");
+    print("=========================================================================\n");
+}
+
+def handle_list(filter_status: str) {
+    root spawn LoadStateFromFile();
+    tasks = [root ->:HasTask:->];
+
+    print("\n=========================================================================");
+    print("                       ACADEMIC TASK REPOSITORY                          ");
+    print("=========================================================================");
+    print(" ID        | Module   | Priority | Due Date         | Est   | Title          ");
+    print("-----------+----------+----------+------------------+-------+----------------");
+
+    cleaned_filter = filter_status.strip().lower();
+    displayed = 0;
+    for t in tasks {
+        if cleaned_filter != "" and cleaned_filter != "all" and t.status.lower() != cleaned_filter {
+            continue;
+        }
+        print(f" {t.id:<9} | {t.module:<8} | {t.priority:<8} | {t.deadline:<16} | {t.estimated_hours:>4.1f}h | {t.title} [{t.status.upper()}]");
+        displayed += 1;
+    }
+    if displayed == 0 {
+        print(" (No matching tasks found.)                                              ");
+    }
+    print("=========================================================================\n");
+}
+
+def handle_complete(target: str) {
+    if target == "" {
+        print("\n[ERROR] Please specify a task name or ID via --task <name/id>\n");
+        return;
+    }
+    root spawn LoadStateFromFile();
+    tasks = [root ->:HasTask:->];
+    blocks = [root ->:HasBlock:->];
+
+    matched = False;
+    cleaned = target.strip().lower();
+    for t in tasks {
+        if cleaned in t.id.lower() or cleaned in t.title.lower() {
+            t.status = "completed";
+            matched = True;
+            print(f"[+] Marked Task '{t.title}' ({t.id}) as COMPLETED.");
+            for b in blocks {
+                if b.task_id == t.id {
+                    b.is_completed = True;
+                    print(f"    - Linked StudyBlock '{b.id}' archived.");
+                }
+            }
         }
     }
 
-    print(f"\nUpcoming Study Blocks ({len(blocks)}):");
-    if len(blocks) == 0 {
-        print("  No active study blocks scheduled.");
+    if matched {
+        root spawn SaveStateToFile();
+        print("[SUCCESS] Task status updated and persisted to disk.\n");
     } else {
-        idx = 1;
-        for b in blocks {
-            crunch_tag = "CRUNCH" if b.is_crunch else "ROUTINE";
-            print(f"  [{idx}] {b.module} | {b.start_time} - {b.end_time} ({b.duration_hours}h) | [{crunch_tag}]");
-            idx += 1;
+        print(f"[!] No task found matching: '{target}'\n");
+    }
+}
+
+def handle_modules() {
+    root spawn LoadStateFromFile();
+    modules = [root ->:HasModule:->];
+    tasks = [root ->:HasTask:->];
+
+    print("\n=========================================================================");
+    print("                    ENROLLED COURSE MODULES & SYLLABUS                   ");
+    print("=========================================================================");
+    print(" Code     | Title                        | Difficulty | Credits | Linked Tasks ");
+    print("----------+------------------------------+------------+---------+--------------");
+    if len(modules) == 0 {
+        print(" (No modules registered yet.)                                            ");
+    } else {
+        for m in modules {
+            count = 0;
+            for t in tasks {
+                if t.module == m.code { count += 1; }
+            }
+            print(f" {m.code:<8} | {m.title:<28} | {m.difficulty_score:>2d}/10     | {m.credit_weight:>4.1f}cr | {count:>3d} tasks   ");
         }
     }
-    print("\nStatus: Schedule is synchronized to disk.");
-    print("=======================================================\n");
+    print("=========================================================================\n");
 }
 
 with entry {
@@ -164,14 +279,14 @@ with entry {
         "command",
         nargs="?",
         default="status",
-        choices=["triage", "add", "status", "list"],
-        help="CLI command to execute (triage, add, status, list)"
+        choices=["triage", "add", "status", "list", "complete", "modules"],
+        help="CLI command to execute: triage, add, status, list, complete, modules"
     );
 
     parser.add_argument(
         "--task",
         default="",
-        help="Task title or name"
+        help="Task title or identifier"
     );
 
     parser.add_argument(
@@ -195,7 +310,13 @@ with entry {
     parser.add_argument(
         "--module",
         default="",
-        help="Course or module code (e.g. 'CS304')"
+        help="Course or module code (e.g. 'CS304', 'EE401')"
+    );
+
+    parser.add_argument(
+        "--filter",
+        default="all",
+        help="Filter status for list command: all, pending, scheduled, completed"
     );
 
     # Allow running when called via `jac run cli/main.jac`
@@ -207,6 +328,7 @@ with entry {
     est_val: str = str(args.est or "");
     prio_val: str = str(args.prio or "");
     module_val: str = str(args.module or "");
+    filter_val: str = str(args.filter or "all");
 
     if task_val != "" and cmd == "status" {
         if due_val != "" or est_val != "" {
@@ -222,7 +344,13 @@ with entry {
     } elif cmd == "add" {
         task_name = task_val if task_val != "" else "New Study Task";
         handle_add(task_name, due_val, est_val, prio_val, module_val);
-    } elif cmd == "status" or cmd == "list" {
+    } elif cmd == "status" {
         handle_status();
+    } elif cmd == "list" {
+        handle_list(filter_val);
+    } elif cmd == "complete" {
+        handle_complete(task_val);
+    } elif cmd == "modules" {
+        handle_modules();
     }
 }
