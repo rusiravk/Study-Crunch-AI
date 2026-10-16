@@ -20,6 +20,9 @@ import from core.persistence {
     SaveStateToFile,
     LoadStateFromFile
 }
+import from core.triage_agent {
+    CrisisTriageAgent
+}
 
 def display_banner() {
     print("==================================================================");
@@ -35,6 +38,9 @@ def verify_system() {
     print("  [+] Web Dashboard (`web/`): Ready (`jac run web/main.jac`)");
     print("  [+] Mobile Client (`mobile/`): Ready (`jac run mobile/main.jac`)");
     print("\n[*] Initializing verification graph nodes & persistence...");
+
+    # Load existing state if available
+    root spawn LoadStateFromFile();
 
     # Attach verification module if not present
     if len([root ->:HasModule:->]) == 0 {
@@ -107,12 +113,27 @@ def verify_system() {
     root spawn SaveStateToFile();
     print("  [+] Persistence Check: Graph state synchronized to disk (.jac/study_crunch_state.json).");
 
+    # Test Crisis Triage Agent
+    print("\n[*] Testing Crisis Triage Engine (Autonomous Conflict Resolution)...");
+    triage_run = root spawn CrisisTriageAgent(
+        task_title="Urgent DSP Midterm Prep",
+        deadline="tomorrow 20:00",
+        estimated_hours=2.0,
+        weight_score=9,
+        module="EC401"
+    );
+    if triage_run.decision is not None {
+        print(f"  [+] Triage Agent Decision: {triage_run.decision.summary}");
+        print(f"  [+] Allocated Window: {triage_run.decision.allocated_start} -> {triage_run.decision.allocated_end}");
+        print(f"  [+] Reasoning Steps Recorded: {len(triage_run.decision.reasoning)} steps");
+    }
+
     print("\n[SUCCESS] Study Crunch AI workspace initialized and compiled cleanly!");
-    print("------------------------------------------------------------------");
-    print("Try running the CLI with:");
-    print('  jac run cli/main.jac triage --task "Lab 03" --due "tomorrow 18:00" --est 4h');
-    print('  jac run cli/main.jac add --task "DSP Revision" --prio high');
-    print("  jac run cli/main.jac status");
+    print("Try running the interfaces with:");
+    print('  CLI Triage     : jac run cli/main.jac triage --task "Lab 03" --due "tomorrow 18:00" --est 4h');
+    print('  CLI Status     : jac run cli/main.jac status');
+    print('  Web Dashboard  : jac run web/main.jac (http://localhost:8000)');
+    print('  Mobile Client  : jac run mobile/main.jac (http://localhost:8000/mobile)');
     print("==================================================================\n");
 }
 

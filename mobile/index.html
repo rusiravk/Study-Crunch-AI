@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Study Crunch Mobile - Quick Glance & Focus Timer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060913;
+      --card: #0f172a;
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary: #6366f1;
+      --crunch: #f43f5e;
+      --routine: #06b6d4;
+      --success: #10b981;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .mobile-app {
+      width: 100%;
+      max-width: 440px;
+      min-height: 100vh;
+      background: #090e1a;
+      border-left: 1px solid var(--card-border);
+      border-right: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Mobile Header */
+    .app-header {
+      padding: 1.25rem 1.25rem 0.75rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--card-border);
+      background: rgba(9, 14, 26, 0.9);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo-badge {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #6366f1, #f43f5e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.9rem;
+    }
+
+    .app-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+
+    .sync-pill {
+      font-size: 0.7rem;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .sync-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+
+    /* Scrollable Body */
+    .app-body {
+      flex: 1;
+      padding: 1rem 1.25rem 5rem 1.25rem;
+      overflow-y: auto;
+    }
+
+    /* Next Up Hero Card */
+    .hero-card {
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.18), rgba(99, 102, 241, 0.18));
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      border-radius: 16px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 0 25px rgba(244, 63, 94, 0.15);
+    }
+
+    .hero-sub {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--crunch);
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+
+    .hero-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .hero-tags {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .tag-chip {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Focus Timer Card */
+    .timer-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      text-align: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .timer-modes {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .mode-btn {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.35rem 0.75rem;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .mode-btn.active {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .timer-display {
+      font-family: 'Outfit', sans-serif;
+      font-size: 3.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.25rem;
+      color: #fff;
+      text-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .timer-controls {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .btn-action {
+      padding: 0.65rem 1.75rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary-action {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-secondary-action {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid var(--card-border);
+    }
+
+    /* Section Headers */
+    .section-head {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Dynamic Alerts Feed */
+    .alert-card {
+      background: rgba(244, 63, 94, 0.08);
+      border: 1px solid rgba(244, 63, 94, 0.25);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+
+    .alert-icon {
+      font-size: 1.1rem;
+    }
+
+    .alert-text {
+      font-size: 0.8rem;
+      line-height: 1.4;
+      color: #cbd5e1;
+    }
+
+    .alert-strong {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* Mini Checklist */
+    .mini-task {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .mini-task-left {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .mini-check {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      border: 2px solid var(--card-border);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .mini-check.checked {
+      background: var(--success);
+      border-color: var(--success);
+    }
+
+    .mini-title {
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .mini-title.done {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    /* Bottom Floating Nav */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(9, 14, 26, 0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--card-border);
+      padding: 0.6rem 1.5rem;
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .b-nav-item {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.72rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .b-nav-item.active {
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="mobile-app">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="app-brand">
+        <div class="logo-badge">SC</div>
+        <div class="app-title">Study Crunch</div>
+      </div>
+      <div class="sync-pill">
+        <span class="sync-dot"></span>
+        <span>Graph Live</span>
+      </div>
+    </header>
+
+    <!-- Scrollable Body -->
+    <div class="app-body">
+
+      <!-- Next Up Hero Card -->
+      <div class="hero-card" id="next-up-card">
+        <div class="hero-sub">&#x1F525; NEXT STUDY BLOCK</div>
+        <div class="hero-title" id="next-title">Loading schedule...</div>
+        <div class="hero-time" id="next-time">--:-- &rarr; --:--</div>
+        <div class="hero-tags">
+          <span class="tag-chip" id="next-tag">CRUNCH</span>
+          <span class="tag-chip" id="next-dur">2.0h Focus</span>
+        </div>
+      </div>
+
+      <!-- Focus Timer -->
+      <div class="timer-card">
+        <div class="timer-modes">
+          <button class="mode-btn active" onclick="setTimerMode(25, this)">25m Sprint</button>
+          <button class="mode-btn" onclick="setTimerMode(50, this)">50m Deep Crunch</button>
+          <button class="mode-btn" onclick="setTimerMode(5, this)">5m Rest</button>
+        </div>
+        <div class="timer-display" id="timer-display">25:00</div>
+        <div class="timer-controls">
+          <button class="btn-action btn-primary-action" id="timer-toggle-btn" onclick="toggleTimer()">START FOCUS</button>
+          <button class="btn-action btn-secondary-action" onclick="resetTimer()">RESET</button>
+        </div>
+      </div>
+
+      <!-- Triage Reschedule Alerts -->
+      <div class="section-head">
+        <span>⚡ Triage Alerts</span>
+        <span style="font-size: 0.75rem; color: var(--muted);" id="alert-count">Live</span>
+      </div>
+      <div id="alerts-container">
+        <!-- Dynamically injected -->
+      </div>
+
+      <!-- Quick Task Checklist -->
+      <div class="section-head" style="margin-top: 1.25rem;">
+        <span>📋 Today's Tasks</span>
+        <a href="/" style="font-size: 0.75rem; color: var(--primary); text-decoration: none;">Desktop &rarr;</a>
+      </div>
+      <div id="checklist-container">
+        <!-- Dynamically injected -->
+      </div>
+
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+      <a href="/mobile" class="b-nav-item active">
+        <span>📱</span>
+        <span>Today</span>
+      </a>
+      <a href="/" class="b-nav-item">
+        <span>📅</span>
+        <span>Timeline</span>
+      </a>
+      <a href="/" class="b-nav-item">
+        <span>⚡</span>
+        <span>Triage</span>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // Pomodoro Timer State
+    let timerMinutes = 25;
+    let timerSeconds = 0;
+    let timerInterval = null;
+    let isTimerRunning = false;
+
+    function setTimerMode(mins, el) {
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      timerMinutes = mins;
+      timerSeconds = 0;
+      updateTimerDisplay();
+      if (isTimerRunning) toggleTimer();
+    }
+
+    function updateTimerDisplay() {
+      const mStr = String(timerMinutes).padStart(2, '0');
+      const sStr = String(timerSeconds).padStart(2, '0');
+      document.getElementById('timer-display').innerText = `${mStr}:${sStr}`;
+    }
+
+    function toggleTimer() {
+      const btn = document.getElementById('timer-toggle-btn');
+      if (isTimerRunning) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        btn.innerText = 'RESUME';
+      } else {
+        isTimerRunning = true;
+        btn.innerText = 'PAUSE';
+        timerInterval = setInterval(() => {
+          if (timerSeconds === 0) {
+            if (timerMinutes === 0) {
+              clearInterval(timerInterval);
+              isTimerRunning = false;
+              alert("Focus Session Complete! Take a well-earned break.");
+              btn.innerText = 'START FOCUS';
+              return;
+            }
+            timerMinutes--;
+            timerSeconds = 59;
+          } else {
+            timerSeconds--;
+          }
+          updateTimerDisplay();
+        }, 1000);
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      document.getElementById('timer-toggle-btn').innerText = 'START FOCUS';
+      timerSeconds = 0;
+      updateTimerDisplay();
+    }
+
+    // Dynamic Mobile State Loading
+    async function fetchMobileData() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        renderMobile(data);
+      } catch (err) {
+        console.error("Mobile fetch error:", err);
+      }
+    }
+
+    function renderMobile(data) {
+      if (!data) return;
+
+      const blocks = (data.blocks || []).filter(b => !b.is_completed);
+      const tasks = data.tasks || [];
+
+      // Render Next Up Card
+      if (blocks.length > 0) {
+        const next = blocks[0];
+        document.getElementById('next-title').innerText = `${next.module} Study Block`;
+        document.getElementById('next-time').innerText = `${next.start_time} -> ${next.end_time}`;
+        document.getElementById('next-tag').innerText = next.is_crunch ? 'CRUNCH BLOCK' : 'ROUTINE';
+        document.getElementById('next-dur').innerText = `${next.duration_hours}h Session`;
+      } else {
+        document.getElementById('next-title').innerText = "Schedule is Clear!";
+        document.getElementById('next-time').innerText = "No upcoming study blocks";
+      }
+
+      // Render Triage Alerts
+      const alertsBox = document.getElementById('alerts-container');
+      alertsBox.innerHTML = '';
+
+      const deferred = tasks.filter(t => t.status === 'deferred');
+      if (deferred.length > 0) {
+        deferred.forEach(d => {
+          const card = document.createElement('div');
+          card.className = 'alert-card';
+          card.innerHTML = `
+            <div class="alert-icon">&#x26A0;&#xFE0F;</div>
+            <div class="alert-text">
+              <span class="alert-strong">Triage Deferral:</span> '${d.title}' was deferred to free up crunch capacity for urgent exam prep.
+            </div>
+          `;
+          alertsBox.appendChild(card);
+        });
+      } else {
+        alertsBox.innerHTML = `
+          <div class="alert-card" style="border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.06);">
+            <div class="alert-icon">&#x2705;</div>
+            <div class="alert-text"><span class="alert-strong">Zero Conflicts:</span> All study blocks are optimized and conflict-free.</div>
+          </div>
+        `;
+      }
+
+      // Render Checklist
+      const checkContainer = document.getElementById('checklist-container');
+      checkContainer.innerHTML = '';
+
+      tasks.slice(0, 5).forEach(t => {
+        const isDone = t.status === 'completed';
+        const row = document.createElement('div');
+        row.className = 'mini-task';
+        row.innerHTML = `
+          <div class="mini-task-left">
+            <button class="mini-check ${isDone ? 'checked' : ''}" onclick="completeMobileTask('${t.title}')">
+              ${isDone ? '&#10003;' : ''}
+            </button>
+            <div>
+              <div class="mini-title ${isDone ? 'done' : ''}">${t.title}</div>
+              <div style="font-size: 0.7rem; color: var(--muted);">${t.module} &bull; ${t.deadline}</div>
+            </div>
+          </div>
+        `;
+        checkContainer.appendChild(row);
+      });
+    }
+
+    async function completeMobileTask(title) {
+      try {
+        await fetch('/api/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ task: title })
+        });
+        fetchMobileData();
+      } catch (err) {
+        console.error("Complete error:", err);
+      }
+    }
+
+    fetchMobileData();
+    setInterval(fetchMobileData, 4000);
+  </script>
+</body>
+</html>
